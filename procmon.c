@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
         attron(COLOR_PAIR(1));
         {
           get_bar(cpuPercent, bar);
-          mvwprintw(stdscr, 0, 0, "%d %d\nCPU [%5.2lf%%]: %s\n", max_y, max_x, cpuPercent, bar);
+          mvwprintw(stdscr, 0, 0, "CPU [%5.2lf%%]: %s\n", cpuPercent, bar);
         }
         attroff(COLOR_PAIR(1));
 
