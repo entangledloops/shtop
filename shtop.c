@@ -9,6 +9,12 @@
 #include <string.h>
 #include <ncurses.h>
 
+struct Node {
+  double cpu, mem;
+  struct Node *next;
+}
+typedef struct Node node;
+
 void interrupt_handler(int signal)
 {
   endwin();
@@ -26,7 +32,7 @@ int main(int argc, char *argv[])
 {
   if (argc < 2)
   {
-    fprintf(stderr, "usage: /path/to/executable [arguments]\n");
+    fprintf(stderr, "usage: /path/to/executable\n");
     return -1;
   }
 
@@ -73,8 +79,12 @@ int main(int argc, char *argv[])
       init_pair(1, COLOR_GREEN, COLOR_BLACK);
       init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 
-      int max_y, max_x;
-      getmaxyx(stdscr, max_y, max_x);
+      int y_max, x_max;
+      getmaxyx(stdscr, y_max, x_max);
+
+      char graph[y_max-3][x_max+1];
+      for (int y = 0; y < y_max-3; ++y)
+        graph[y][x_max] = '\0';
 
       unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys, lastTotalIdle;
       FILE *cpu = fopen("/proc/stat", "r");
