@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/sysinfo.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -25,7 +27,6 @@ int main(int argc, char *argv[])
   handler.sa_handler = interrupt_handler;
   sigemptyset(&handler.sa_mask);
   handler.sa_flags = 0;
-
 
   int status;
   int pipefd[2];
@@ -62,18 +63,48 @@ int main(int argc, char *argv[])
 
       initscr();
       start_color();
-      
-      int counter = 0;
+      init_pair(1, COLOR_GREEN, COLOR_BLACK);
+      init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+
+      unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys, lastTotalIdle;
+      FILE *cpu = fopen("/proc/stat", "r");
+      fscanf(cpu, "cpu %llu %llu %llu %llu", &lastTotalUser, &lastTotalUserLow, &lastTotalSys, &lastTotalIdle);
+      fclose(cpu);
+
       while (true)
       {
-        init_pair(1, COLOR_GREEN, COLOR_BLACK);
+        unsigned long long totalUser, totalUserLow, totalSys, totalIdle;
+        FILE *cpu = fopen("/proc/stat", "r");
+        fscanf(cpu, "cpu %llu %llu %llu %llu", &totalUser, &totalUserLow, &totalSys, &totalIdle);
+        fclose(cpu);
+
+        unsigned long long cpuTotal = ( (totalUser - lastTotalUser) + (totalUserLow - lastTotalUserLow) + (totalSys - lastTotalSys) );
+        double cpuPercent = cpuTotal;
+        cpuTotal += (totalIdle - lastTotalIdle);
+        cpuPercent /= cpuTotal;
+        cpuPercent *= 100;
+
+        struct sysinfo memInfo;
+        sysinfo(&memInfo);
+        long long totalVirtualMem = memInfo.totalram;
+        long long totalUsedMem = memInfo.totalram - memInfo.freeram;
+        totalUsedMem += memInfo.totalswap - memInfo.freeswap;
+        totalUsedMem *= memInfo.mem_unit;
+        double memPercent = (double) totalUsedMem / (double) totalVirtualMem;
+
         attron(COLOR_PAIR(1));
         {
-          //if (fgets(buffer, sizeof buffer, output)) mvwprintw(stdscr, 0, 10, "%s", buffer);
-          mvwprintw(stdscr, 0, 10, "%d", ++counter);
-          refresh();
+          mvwprintw(stdscr, 20, 40, "CPU: %lf\n", cpuPercent);
         }
         attroff(COLOR_PAIR(1));
+
+        attron(COLOR_PAIR(2));
+        {
+          mvwprintw(stdscr, 21, 40, "MEM: %lf\n", memPercent);
+        }
+        attroff(COLOR_PAIR(2));
+        
+        refresh();
       }
   }
 
