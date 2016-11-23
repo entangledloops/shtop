@@ -73,6 +73,9 @@ int main(int argc, char *argv[])
       init_pair(1, COLOR_GREEN, COLOR_BLACK);
       init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 
+      int max_y, max_x;
+      getmaxyx(stdscr, max_y, max_x);
+
       unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys, lastTotalIdle;
       FILE *cpu = fopen("/proc/stat", "r");
       fscanf(cpu, "cpu %llu %llu %llu %llu", &lastTotalUser, &lastTotalUserLow, &lastTotalSys, &lastTotalIdle);
@@ -106,7 +109,7 @@ int main(int argc, char *argv[])
         attron(COLOR_PAIR(1));
         {
           get_bar(cpuPercent, bar);
-          mvwprintw(stdscr, 0, 0, "CPU [%5.2lf%%]: %s\n", cpuPercent, bar);
+          mvwprintw(stdscr, 0, 0, "%d %d\nCPU [%5.2lf%%]: %s\n", max_y, max_x, cpuPercent, bar);
         }
         attroff(COLOR_PAIR(1));
 
