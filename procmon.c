@@ -15,6 +15,14 @@ void interrupt_handler(int signal)
   exit(1);
 }
 
+void get_bar(double fraction, char *out)
+{
+  unsigned int portion = 100 * fraction;
+  for (int i = 0; i < 100; ++i)
+    if (i < portion) out[i] = '|';
+    else out[i] = ' ';
+}
+
 int main(int argc, char *argv[])
 {
   if (argc < 2)
@@ -92,15 +100,20 @@ int main(int argc, char *argv[])
         totalUsedMem *= memInfo.mem_unit;
         double memPercent = (double) totalUsedMem / (double) totalVirtualMem;
 
+        char bar[101];
+        bar[100] = '\0';
+
         attron(COLOR_PAIR(1));
         {
-          mvwprintw(stdscr, 20, 40, "CPU: %lf\n", cpuPercent);
+          get_bar(cpuPercent, bar);
+          mvwprintw(stdscr, 20, 0, "CPU: %s\n", bar);
         }
         attroff(COLOR_PAIR(1));
 
         attron(COLOR_PAIR(2));
         {
-          mvwprintw(stdscr, 21, 40, "MEM: %lf\n", memPercent);
+          get_bar(memPercent, bar);
+          mvwprintw(stdscr, 21, 0, "MEM: %s\n", bar);
         }
         attroff(COLOR_PAIR(2));
         
