@@ -15,11 +15,10 @@ void interrupt_handler(int signal)
   exit(1);
 }
 
-void get_bar(double fraction, char *out)
+void get_bar(double percent, char *out)
 {
-  unsigned int portion = 100 * fraction;
   for (int i = 0; i < 100; ++i)
-    if (i < portion) out[i] = '|';
+    if (i < percent) out[i] = '|';
     else out[i] = ' ';
 }
 
@@ -59,7 +58,7 @@ int main(int argc, char *argv[])
       close(pipefd[0]);
       close(pipefd[1]);
 
-      execl(argv[1], argv[1], argv[2], (char*) NULL);
+      execl(argv[1], argv[1], (char*) NULL);
       fprintf(stderr, "failed to execute\n");
       return -1;
 
@@ -99,6 +98,7 @@ int main(int argc, char *argv[])
         totalUsedMem += memInfo.totalswap - memInfo.freeswap;
         totalUsedMem *= memInfo.mem_unit;
         double memPercent = (double) totalUsedMem / (double) totalVirtualMem;
+        memPercent *= 100;
 
         char bar[101];
         bar[100] = '\0';
@@ -106,18 +106,20 @@ int main(int argc, char *argv[])
         attron(COLOR_PAIR(1));
         {
           get_bar(cpuPercent, bar);
-          mvwprintw(stdscr, 20, 0, "CPU: %s\n", bar);
+          mvwprintw(stdscr, 0, 0, "CPU [%5.2lf%%]: %s\n", cpuPercent, bar);
         }
         attroff(COLOR_PAIR(1));
 
         attron(COLOR_PAIR(2));
         {
           get_bar(memPercent, bar);
-          mvwprintw(stdscr, 21, 0, "MEM: %s\n", bar);
+          mvwprintw(stdscr, 1, 0, "MEM [%5.2lf%%]: %s\n", memPercent, bar);
         }
         attroff(COLOR_PAIR(2));
         
         refresh();
+
+        usleep(250000);
       }
   }
 
